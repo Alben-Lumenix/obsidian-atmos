@@ -33,7 +33,7 @@ export class AtmosSettingTab extends PluginSettingTab {
     let searchText = '';
     const results = containerEl.createDiv();
     new Setting(containerEl).setName('搜索中国大陆城市').setDesc('输入城市或区县名称后点击搜索，从候选结果中选择。')
-      .addText((text) => text.setPlaceholder('例如 金坛').onChange((value) => { searchText = value; }))
+      .addText((text) => text.setPlaceholder('例如 海淀').onChange((value) => { searchText = value; }))
       .addButton((button) => button.setButtonText('搜索').onClick(async () => {
         results.empty();
         try {
@@ -58,7 +58,7 @@ export class AtmosSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName('纬度').addText((text) => text.setPlaceholder('31.74').onChange((value) => { latitude = value; }));
     new Setting(containerEl).setName('经度').addText((text) => text.setPlaceholder('119.57').onChange((value) => { longitude = value; }));
     new Setting(containerEl).setName('地点名称').setDesc('可选；用于插入笔记时显示。')
-      .addText((text) => text.setPlaceholder('金坛').onChange((value) => { name = value; }))
+      .addText((text) => text.setPlaceholder('例如 北京').onChange((value) => { name = value; }))
       .addButton((button) => button.setButtonText('保存坐标').onClick(async () => {
         try {
           const location = parseCoordinates(latitude, longitude, name);
