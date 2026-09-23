@@ -1,0 +1,9 @@
+{
+  "id": "atmos",
+  "name": "Atmos",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Search for a location and insert current weather into your note.",
+  "author": "Atmos contributors",
+  "isDesktopOnly": false
+}
