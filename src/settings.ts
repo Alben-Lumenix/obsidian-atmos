@@ -11,7 +11,7 @@ export class AtmosSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Atmos 天气' });
+    new Setting(containerEl).setName('Atmos 天气').setHeading();
     containerEl.createEl('p', { text: '先填写和风天气控制台中的 API Host 和 API Key，再搜索地点或填写坐标。' });
 
     new Setting(containerEl).setName('API Host').setDesc('例如 abcxyz.qweatherapi.com；每位用户都有自己的域名。')
@@ -28,7 +28,7 @@ export class AtmosSettingTab extends PluginSettingTab {
         });
       });
 
-    containerEl.createEl('h3', { text: '地点' });
+    new Setting(containerEl).setName('地点').setHeading();
     const selected = containerEl.createEl('p', { text: this.plugin.settings.location ? `当前地点：${locationLabel(this.plugin.settings.location)}` : '尚未选择地点。' });
     let searchText = '';
     const results = containerEl.createDiv();
