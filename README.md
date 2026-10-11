@@ -69,6 +69,21 @@ npm run verify
 
 `npm run check` checks TypeScript types; `npm test` runs offline tests with mocked responses; `npm run build` writes `main.js` in the repository root; and `npm run verify` runs type checking, a production build, and the release verification script. During development, `npm run dev` watches the source and rebuilds `main.js`; reload Atmos in Obsidian to use the new build. The build does not install the plugin into a vault.
 
+### Live API integration test
+
+The live API test is excluded from `npm test` and `npm run verify`. It uses fixed Beijing coordinates, sends one current-weather request through Atmos's production request validation and response parsing, then runs the production Markdown renderer. It does not open or access an Obsidian vault.
+
+Provide `QWEATHER_API_HOST` and `QWEATHER_API_KEY` as environment variables, or save them in `.env.atmos-integration` at the repository root:
+
+```dotenv
+QWEATHER_API_HOST=your-dedicated-api-host
+QWEATHER_API_KEY=your-api-key
+```
+
+The file matches the `.env.*` rule in `.gitignore`. The runner checks `git check-ignore` before reading it and stops if Git does not ignore it. Create and fill the file only after confirming that Git ignores it. Do not paste credentials into Codex chat or commit them.
+
+After credentials are configured, explicitly run `npm run test:integration:live`. Each request has a 10-second timeout and is never retried. The ignored `.atmos-integration-budget.json` file tracks cumulative reservations before network activity, with a maximum of four; failures and timeouts consume budget too. Output includes the rendered weather result but suppresses credentials and raw network errors. Do not delete or reset the budget file to bypass the limit.
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).

@@ -69,6 +69,21 @@ npm run verify
 
 `npm run check` 检查 TypeScript 类型；`npm test` 使用 Mock 响应运行离线测试；`npm run build` 在仓库根目录生成 `main.js`；`npm run verify` 依次执行类型检查、生产构建和发布验证脚本。开发时可运行 `npm run dev` 监听源码并持续构建，随后在 Obsidian 中重新加载 Atmos。构建命令不会自动安装插件到笔记库。
 
+### 真实 API 集成测试
+
+真实 API 测试不会包含在 `npm test` 或 `npm run verify` 中。它只读取固定的北京坐标，经 Atmos 生产请求校验与响应解析逻辑向 QWeather 发出一次实时天气请求，并运行生产 Markdown 渲染逻辑；不需要打开或访问 Obsidian 笔记库。
+
+凭据可通过环境变量 `QWEATHER_API_HOST`、`QWEATHER_API_KEY` 提供，也可写入仓库根目录的 `.env.atmos-integration`：
+
+```dotenv
+QWEATHER_API_HOST=你的专属API域名
+QWEATHER_API_KEY=你的API密钥
+```
+
+该文件匹配 `.gitignore` 中的 `.env.*` 规则。脚本会在读取配置前再次运行 `git check-ignore`；若文件不受忽略规则保护，测试会停止。请仅在看到 Git 确认忽略后再创建和填写此文件。不要将凭据粘贴到 Codex 对话、提交或日志中。
+
+配置完成后，显式运行 `npm run test:integration:live`。每次请求有 10 秒超时，不会自动重试；本地忽略文件 `.atmos-integration-budget.json` 会在网络请求前累计扣减预算，最多 4 次，超时或失败也计入。测试输出会显示天气结果，但不会打印凭据或原始网络错误。不要删除或重置预算文件来规避上限。
+
 ## 许可证
 
 MIT，详见 [LICENSE](./LICENSE)。
