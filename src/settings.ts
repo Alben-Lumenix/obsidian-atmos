@@ -11,7 +11,7 @@ export class AtmosSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName('Atmos 天气').setHeading();
+    new Setting(containerEl).setName('天气').setHeading();
     containerEl.createEl('p', { text: '先填写和风天气控制台中的 API Host 和 API Key，再搜索地点或填写坐标。' });
 
     new Setting(containerEl).setName('API Host').setDesc('例如 abcxyz.qweatherapi.com；每位用户都有自己的域名。')
