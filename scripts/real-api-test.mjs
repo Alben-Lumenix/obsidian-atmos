@@ -76,15 +76,19 @@ function reserveRequest() {
   }
 }
 
-if (!process.argv.includes('--live')) {
+const geoNanjing = process.argv.includes('--geo-nanjing');
+if (!process.argv.includes('--live') && !geoNanjing) {
   console.error('Live integration is opt-in. Run: npm run test:integration:live');
   process.exit(2);
 }
 
 try {
   const { host, key } = credentials();
+  const entryPoints = geoNanjing
+    ? [path.join(root, 'src/location-search.ts'), path.join(root, 'src/weather-provider.ts'), path.join(root, 'src/http.ts')]
+    : [path.join(root, 'src/weather-provider.ts'), path.join(root, 'src/renderer.ts'), path.join(root, 'src/http.ts')];
   const bundle = await esbuild.build({
-    entryPoints: [path.join(root, 'src/weather-provider.ts'), path.join(root, 'src/renderer.ts'), path.join(root, 'src/http.ts')],
+    entryPoints,
     bundle: true,
     write: false,
     format: 'cjs',
@@ -107,10 +111,9 @@ try {
     new Function('module', 'exports', output.text)(loaded, loaded.exports);
     modules.set(path.basename(output.path, '.js'), loaded.exports);
   }
-  const { currentWeather } = modules.get('weather-provider');
+  const { currentWeather, formatApiCoordinate } = modules.get('weather-provider');
   const { getJson } = modules.get('http');
-  const { renderWeather } = modules.get('renderer');
-  const location = { name: '北京（集成测试）', latitude: 39.9042, longitude: 116.4074 };
+  const location = geoNanjing ? undefined : { name: '北京（集成测试）', latitude: 39.9042, longitude: 116.4074 };
   let budgetUsed;
   const transport = async (url, apiKey) => {
     budgetUsed = reserveRequest();
@@ -124,10 +127,31 @@ try {
     try { json = await response.json(); } catch { json = undefined; }
     return { status: response.status, json };
   };
-  const weather = await currentWeather(host, key, location, (requestHost, requestKey, requestPath) =>
-    getJson(requestHost, requestKey, requestPath, transport));
-  const rendered = renderWeather(location, weather).split(key).join('[REDACTED]');
-  process.stdout.write(`${rendered}\n`);
+  if (geoNanjing) {
+    const { searchLocations } = modules.get('location-search');
+    const locations = await searchLocations(host, key, '南京', (requestHost, requestKey, requestPath) =>
+      getJson(requestHost, requestKey, requestPath, transport));
+    const city = locations.find((item) => item.name === '南京' && item.latitude === 32.0603 && item.longitude === 118.7969)
+      || locations.find((item) => item.name === '南京');
+    if (!city || !city.adm1 || !city.adm2 || !city.country || !Number.isFinite(city.latitude) || !Number.isFinite(city.longitude)) {
+      throw new Error('GeoAPI response did not contain a complete Nanjing location.');
+    }
+    let weatherPath;
+    await currentWeather(host, key, city, async (_host, _key, requestPath) => {
+      weatherPath = requestPath;
+      return { condition: { text: '集成测试' }, temperature: { value: 20, unit: '°C' } };
+    });
+    const expectedCoordinates = `/${formatApiCoordinate(city.latitude)}/${formatApiCoordinate(city.longitude)}?lang=zh`;
+    if (!weatherPath?.includes(expectedCoordinates)) throw new Error('Parsed GeoAPI coordinates were not accepted by weather lookup.');
+    process.stdout.write(`GeoAPI parsed: ${city.name} · ${city.adm2} · ${city.adm1} · ${city.country}; ${city.latitude}, ${city.longitude}\n`);
+    process.stdout.write('Parsed location accepted by weather query parser (no weather HTTP request sent).\n');
+  } else {
+    const { renderWeather } = modules.get('renderer');
+    const weather = await currentWeather(host, key, location, (requestHost, requestKey, requestPath) =>
+      getJson(requestHost, requestKey, requestPath, transport));
+    const rendered = renderWeather(location, weather).split(key).join('[REDACTED]');
+    process.stdout.write(`${rendered}\n`);
+  }
   process.stdout.write(`Live QWeather API integration passed. Request budget used: ${budgetUsed}/4.\n`);
 } catch {
   process.stderr.write('Live QWeather API integration failed. Error details were suppressed to protect credentials. Any sent request consumed budget.\n');
