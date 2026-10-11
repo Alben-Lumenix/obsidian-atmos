@@ -35,6 +35,8 @@ export async function currentWeather(
     unit: data.temperature.unit || '°C',
     feelsLike: typeof data.feelsLike?.value === 'number' ? data.feelsLike.value : undefined,
     humidity: typeof data.humidity === 'number' ? data.humidity : undefined,
-    attribution: Array.isArray(data.metadata?.attributions) ? data.metadata.attributions.filter((item) => /^https:\/\//.test(item)) : [],
+    attribution: Array.isArray(data.metadata?.attributions)
+      ? data.metadata.attributions.filter((item): item is string => typeof item === 'string')
+      : [],
   };
 }
