@@ -12,10 +12,15 @@ interface QWeatherCity {
 }
 interface QWeatherLookup { code?: string; location?: QWeatherCity[] }
 
-export async function searchLocations(host: string, key: string, query: string): Promise<Location[]> {
+export async function searchLocations(
+  host: string,
+  key: string,
+  query: string,
+  request: typeof getJson = getJson,
+): Promise<Location[]> {
   if (!query.trim()) throw new AtmosError('请输入城市或地区名称。');
   const params = new URLSearchParams({ location: query.trim(), range: 'cn', lang: 'zh', number: '10' });
-  const data = await getJson<QWeatherLookup>(host, key, `/geo/v2/city/lookup?${params}`);
+  const data = await request<QWeatherLookup>(host, key, `/geo/v2/city/lookup?${params}`);
   if (data.code !== '200') throw new AtmosError(`城市搜索失败（代码 ${data.code || '未知'}）。`);
   return (data.location || []).flatMap((item) => {
     const latitude = Number(item.lat);

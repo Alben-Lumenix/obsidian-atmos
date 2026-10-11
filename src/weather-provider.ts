@@ -10,9 +10,22 @@ interface QWeatherCurrent {
   metadata?: { attributions?: string[] };
 }
 
-export async function currentWeather(host: string, key: string, location: Location): Promise<WeatherData> {
+export function formatApiCoordinate(value: number): string {
+  const magnitude = Math.abs(value) * 100;
+  const rounded = Math.round(magnitude + Number.EPSILON * magnitude) / 100;
+  return (Math.sign(value) * rounded).toFixed(2);
+}
+
+export async function currentWeather(
+  host: string,
+  key: string,
+  location: Location,
+  request: typeof getJson = getJson,
+): Promise<WeatherData> {
   const query = new URLSearchParams({ lang: 'zh' });
-  const data = await getJson<QWeatherCurrent>(host, key, `/weather/v1/current/${location.latitude}/${location.longitude}?${query}`);
+  const latitude = formatApiCoordinate(location.latitude);
+  const longitude = formatApiCoordinate(location.longitude);
+  const data = await request<QWeatherCurrent>(host, key, `/weather/v1/current/${latitude}/${longitude}?${query}`);
   if (!data.condition?.text || typeof data.temperature?.value !== 'number') {
     throw new AtmosError('天气服务返回的数据不完整，无法插入笔记。');
   }
