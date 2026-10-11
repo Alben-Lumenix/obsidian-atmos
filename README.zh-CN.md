@@ -12,7 +12,7 @@ Atmos 是一个 Obsidian 天气插件：为选定地点获取实时天气，并�
 
 ## 安装
 
-Atmos 目前尚未通过 Obsidian 社区插件目录分发。手动安装步骤：
+Atmos 尚未提交至 Obsidian 社区插件目录，也尚未发布，目前正在准备提交。若日后获批并正式发布，用户可在“设置 → 第三方插件 → 浏览”中安装。在此之前，请手动安装：
 
 1. 安装 [Node.js](https://nodejs.org/)，在本仓库运行 `npm install` 和 `npm run build`。
 2. 在你的笔记库中创建 `.obsidian/plugins/atmos/`，将 `manifest.json` 和构建生成的 `main.js` 复制进去。
@@ -37,13 +37,23 @@ Atmos 目前尚未通过 Obsidian 社区插件目录分发。手动安装步骤�
 
 搜索范围限定中国大陆，最多返回十个结果。搜索和天气请求均要求和风天气返回中文内容。插件当前没有单位或输出格式设置。
 
-## 隐私
+## 隐私与网络请求
 
-Atmos 将 API Host、API Key 和已选地点保存在 Obsidian 插件的 `data.json` 中。根据笔记库的同步设置，该文件可能被同步；不要分享或提交到仓库。插件通过 Obsidian 的网络请求接口，将搜索文字、地点坐标和 API Key 发送给和风天气；不会向和风天气发送笔记内容。
+Atmos 将 API Host、API Key 和已选地点保存在插件的 `data.json` 中。API Key 在该文件中没有加密。Obsidian 笔记库同步可能会同步 `data.json`；请勿分享该文件或将其提交到仓库。
+
+请求会发送到你配置的 API Host，并通过 Obsidian 的网络请求接口发出。城市搜索会发送搜索文字和搜索参数；实时天气请求会发送所选地点的纬度、经度和语言参数。两类请求都会在 `X-QW-Api-Key` 请求头中携带 API Key。插件不会向和风天气发送笔记内容。
 
 ## 当前范围
 
-Atmos 目前只请求实时天气。设备或 IP 自动定位、天气预报、预警、缓存和自定义输出模板均未实现。尚未验证在真实 Obsidian 笔记库中加载和在移动端使用。
+Atmos 目前支持搜索中国大陆地点、手动填写坐标、测试凭据和地点，以及在编辑器光标处插入实时天气。设备或 IP 自动定位、自动创建或写入日记、定时更新、天气预报、预警、缓存和自定义输出模板均未实现。尚未验证在真实 Obsidian 笔记库中加载和在移动端使用。
+
+## 故障排查
+
+- **API Host 格式错误：**从和风天气控制台复制专属 HTTPS 域名，只填写域名；不支持路径、端口或查询参数。
+- **HTTP 401 或 403：**确认 API Host 和 API Key 属于预期的和风天气项目，并检查 Key 是否复制完整。
+- **无法连接：**检查网络连接和 API Host 后重试。只有在搜索、测试或插入天气时，Atmos 才会联系和风天气。
+- **搜索无结果：**搜索范围仅限中国大陆；也可以手动填写经纬度。
+- **天气响应不完整：**稍后重试，并检查和风天气服务及账号状态。
 
 ## 开发
 
@@ -52,10 +62,12 @@ Atmos 目前只请求实时天气。设备或 IP 自动定位、天气预报、�
 ```sh
 npm install
 npm run check
+npm test
 npm run build
+npm run verify
 ```
 
-`npm run check` 检查 TypeScript 类型；`npm run build` 在仓库根目录生成 `main.js`。开发时可运行 `npm run dev` 监听源码并持续构建，随后在 Obsidian 中重新加载 Atmos。构建命令不会自动安装插件到笔记库。
+`npm run check` 检查 TypeScript 类型；`npm test` 使用 Mock 响应运行离线测试；`npm run build` 在仓库根目录生成 `main.js`；`npm run verify` 依次执行类型检查、生产构建和发布验证脚本。开发时可运行 `npm run dev` 监听源码并持续构建，随后在 Obsidian 中重新加载 Atmos。构建命令不会自动安装插件到笔记库。
 
 ## 许可证
 
